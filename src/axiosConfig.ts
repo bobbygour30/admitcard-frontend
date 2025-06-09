@@ -1,9 +1,10 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Fallback for local dev only
+// Use environment variable for API_URL, with a fallback for local development
+const API_URL = import.meta.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const instance = axios.create({
-  baseURL: `${API_URL}/api`, // E.g., https://your-backend.vercel.app/api
+  baseURL: `${API_URL}/api`, // E.g., https://admit-backend.vercel.app/api
   headers: {
     'Content-Type': 'application/json',
   },
