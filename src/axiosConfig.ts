@@ -8,7 +8,7 @@ const instance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Enable if backend requires credentials
+  withCredentials: false, 
 });
 
 instance.interceptors.request.use(
