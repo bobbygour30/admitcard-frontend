@@ -1,18 +1,17 @@
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Fallback for local dev
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // Fallback for local dev only
 
 const instance = axios.create({
-  baseURL: `${API_URL}/api`, // E.g., http://localhost:5000/api or https://your-backend.vercel.app/api
+  baseURL: `${API_URL}/api`, // E.g., https://your-backend.vercel.app/api
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // Enable if your backend requires credentials (e.g., cookies)
+  withCredentials: true, // Enable if backend requires credentials
 });
 
 instance.interceptors.request.use(
   (config) => {
-    // Add auth token if needed
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
