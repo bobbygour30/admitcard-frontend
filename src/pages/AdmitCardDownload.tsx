@@ -74,24 +74,24 @@ const AdmitCardDownload: React.FC = () => {
     }
   };
 
-  const handleEmail = async () => {
-    if (!admitCard) return;
-    setApiError(null);
-    setIsEmailing(true);
+  // const handleEmail = async () => {
+  //   if (!admitCard) return;
+  //   setApiError(null);
+  //   setIsEmailing(true);
 
-    try {
-      await axios.post('/admit-card/email', {
-        applicationNumber: admitCard.applicationNumber,
-      });
-      alert('Admit card has been emailed successfully!');
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to send email. Please try again.';
-      setApiError(errorMessage);
-      console.error('Email Admit Card Error:', error);
-    } finally {
-      setIsEmailing(false);
-    }
-  };
+  //   try {
+  //     await axios.post('/admit-card/email', {
+  //       applicationNumber: admitCard.applicationNumber,
+  //     });
+  //     alert('Admit card has been emailed successfully!');
+  //   } catch (error: any) {
+  //     const errorMessage = error.response?.data?.message || error.message || 'Failed to send email. Please try again.';
+  //     setApiError(errorMessage);
+  //     console.error('Email Admit Card Error:', error);
+  //   } finally {
+  //     setIsEmailing(false);
+  //   }
+  // };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -269,44 +269,7 @@ const AdmitCardDownload: React.FC = () => {
                   <Download className="w-5 h-5 mr-2" />
                   Download Admit Card
                 </button>
-                <button
-                  onClick={handleEmail}
-                  disabled={isEmailing}
-                  className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold flex items-center text-sm transition-colors duration-200 ${
-                    isEmailing ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                >
-                  {isEmailing ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Emailing...
-                    </>
-                  ) : (
-                    <>
-                      <Mail className="w-5 h-5 mr-2" />
-                      Email Admit Card
-                    </>
-                  )}
-                </button>
+                
               </div>
             </div>
           )}
