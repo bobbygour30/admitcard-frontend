@@ -1,6 +1,5 @@
-import  { createContext, useState, useContext } from 'react';
+import { createContext, useState, useContext } from 'react';
 import type { ReactNode } from 'react';
-
 
 interface Center {
   name: string;
@@ -18,23 +17,33 @@ interface Shift {
   currentBookings: number;
 }
 
+interface PersonalInfo {
+  union: string;
+  name: string;
+  fatherName: string;
+  motherName: string;
+  dob: string;
+  gender: string;
+  email: string;
+  mobile: string;
+  address: string;
+  aadhaarNumber: string;
+  selectedPosts: string[];
+  districtPreferences: string[];
+  higherEducation: string;
+  percentage: string;
+  postDesignation?: string;
+  organizationName?: string;
+  totalExperience?: string;
+}
+
 interface RegistrationData {
-  personalInfo: {
-    union: string;
-    name: string;
-    fatherName: string;
-    motherName: string;
-    dob: string;
-    gender: string;
-    email: string;
-    mobile: string;
-    address: string;
-    aadhaarNumber: string;
-    selectedPosts: string[];
-    districtPreferences: string[];
-  };
+  personalInfo: PersonalInfo;
   photo: string | null;
   signature: string | null;
+  cv: string | null;
+  workCert: string | null;
+  qualCert: string | null;
   examCenter: string | null;
   examShift: string | null;
   applicationNumber: string | null;
@@ -60,9 +69,17 @@ const defaultRegistrationData: RegistrationData = {
     aadhaarNumber: '',
     selectedPosts: [],
     districtPreferences: [],
+    higherEducation: '',
+    percentage: '',
+    postDesignation: '',
+    organizationName: '',
+    totalExperience: '',
   },
   photo: null,
   signature: null,
+  cv: null,
+  workCert: null,
+  qualCert: null,
   examCenter: null,
   examShift: null,
   applicationNumber: null,
@@ -86,6 +103,22 @@ const shiftsData: Shift[] = [
   { id: 3, name: 'C', time: '3:00 PM - 4:00 PM', date: '12-06-2025', capacity: 250, currentBookings: 0 },
 ];
 
+interface RegistrationContextType {
+  registrationData: RegistrationData;
+  updatePersonalInfo: (data: Partial<PersonalInfo>) => void;
+  updatePhoto: (photoUrl: string) => void;
+  updateSignature: (signatureUrl: string) => void;
+  updateCv: (cvUrl: string | null) => void;
+  updateWorkCert: (workCertUrl: string | null) => void;
+  updateQualCert: (qualCertUrl: string | null) => void;
+  allocateExamCenter: () => void;
+  generateApplicationNumber: () => string;
+  updatePaymentStatus: (status: boolean, transactionNumber: string) => void;
+  updateDocuments: (type: 'idProof' | 'addressProof', url: string) => void;
+  centers: Center[];
+  shifts: Shift[];
+}
+
 const RegistrationContext = createContext<RegistrationContextType | undefined>(undefined);
 
 export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -93,7 +126,7 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
   const [centers, setCenters] = useState<Center[]>(centersData);
   const [shifts, setShifts] = useState<Shift[]>(shiftsData);
 
-  const updatePersonalInfo = (data: any) => {
+  const updatePersonalInfo = (data: Partial<PersonalInfo>) => {
     setRegistrationData(prev => ({
       ...prev,
       personalInfo: {
@@ -117,8 +150,28 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }));
   };
 
+  const updateCv = (cvUrl: string | null) => {
+    setRegistrationData(prev => ({
+      ...prev,
+      cv: cvUrl,
+    }));
+  };
+
+  const updateWorkCert = (workCertUrl: string | null) => {
+    setRegistrationData(prev => ({
+      ...prev,
+      workCert: workCertUrl,
+    }));
+  };
+
+  const updateQualCert = (qualCertUrl: string | null) => {
+    setRegistrationData(prev => ({
+      ...prev,
+      qualCert: qualCertUrl,
+    }));
+  };
+
   const allocateExamCenter = () => {
-    // Find center with available capacity
     const availableCenters = centers.filter(center => center.currentBookings < center.capacity);
     if (availableCenters.length === 0) {
       throw new Error('No available centers');
@@ -128,7 +181,6 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
       a.currentBookings - b.currentBookings
     )[0];
 
-    // Find shift with available capacity
     const availableShifts = shifts.filter(shift => shift.currentBookings < shift.capacity);
     if (availableShifts.length === 0) {
       throw new Error('No available shifts');
@@ -198,11 +250,14 @@ export const RegistrationProvider: React.FC<{ children: ReactNode }> = ({ childr
     }));
   };
 
-  const value = {
+  const value: RegistrationContextType = {
     registrationData,
     updatePersonalInfo,
     updatePhoto,
     updateSignature,
+    updateCv,
+    updateWorkCert,
+    updateQualCert,
     allocateExamCenter,
     generateApplicationNumber,
     updatePaymentStatus,
@@ -225,16 +280,3 @@ export const useRegistration = () => {
   }
   return context;
 };
-
-interface RegistrationContextType {
-  registrationData: RegistrationData;
-  updatePersonalInfo: (data: any) => void;
-  updatePhoto: (photoUrl: string) => void;
-  updateSignature: (signatureUrl: string) => void;
-  allocateExamCenter: () => void;
-  generateApplicationNumber: () => string;
-  updatePaymentStatus: (status: boolean, transactionNumber: string) => void;
-  updateDocuments: (type: 'idProof' | 'addressProof', url: string) => void;
-  centers: Center[];
-  shifts: Shift[];
-}

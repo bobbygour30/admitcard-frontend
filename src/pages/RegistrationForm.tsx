@@ -16,11 +16,12 @@ interface FormData {
   address: string;
   aadhaarNumber: string;
   selectedPosts: string[];
-  districtPreferences: string;
-  collegeBoard?: string;
-  percentage?: string;
+  districtPreferences: string[];
+  higherEducation: string;
+  percentage: string;
   postDesignation?: string;
-  timeInYears?: string;
+  organizationName?: string;
+  totalExperience?: string;
 }
 
 const postOptions = [
@@ -57,6 +58,7 @@ const tirhutDistrictOptions = [
 ];
 
 const unionOptions = ['Harit Union', 'Tirhut Union'];
+const educationOptions = ['10', '12th', 'Graduate', 'Postgraduate'];
 
 const RegistrationForm: React.FC = () => {
   const navigate = useNavigate();
@@ -69,12 +71,22 @@ const RegistrationForm: React.FC = () => {
   } = useForm<FormData>({
     defaultValues: {
       union: '',
+      name: '',
+      fatherName: '',
+      motherName: '',
+      dob: '',
+      gender: '',
+      email: '',
+      mobile: '',
+      address: '',
+      aadhaarNumber: '',
       selectedPosts: [],
-      districtPreferences: '',
-      collegeBoard: '',
+      districtPreferences: [],
+      higherEducation: '',
       percentage: '',
       postDesignation: '',
-      timeInYears: '',
+      organizationName: '',
+      totalExperience: '',
     },
   });
 
@@ -145,8 +157,8 @@ const RegistrationForm: React.FC = () => {
       return;
     }
 
-    if (!data.districtPreferences) {
-      setApiError('Please select a district preference');
+    if (!data.districtPreferences || data.districtPreferences.length === 0) {
+      setApiError('Please select at least one district preference');
       return;
     }
 
@@ -155,7 +167,6 @@ const RegistrationForm: React.FC = () => {
     try {
       const payload = {
         ...data,
-        districtPreferences: [data.districtPreferences],
         photo,
         signature,
         cv,
@@ -413,27 +424,39 @@ const RegistrationForm: React.FC = () => {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
-                Education Details (Optional)
+                Higher Education Qualification Detail <span className="text-red-500">*</span>
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    College/Board
+                    Higher Education <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    {...register('collegeBoard')}
-                  />
+                  <select
+                    className={`w-full p-2 border rounded-md ${
+                      errors.higherEducation ? 'border-red-500' : 'border-gray-300'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                    {...register('higherEducation', { required: 'Higher education is required' })}
+                  >
+                    <option value="">Select Education</option>
+                    {educationOptions.map((edu) => (
+                      <option key={edu} value={edu}>{edu}</option>
+                    ))}
+                  </select>
+                  {errors.higherEducation && (
+                    <p className="text-red-500 text-xs mt-1">{errors.higherEducation.message}</p>
+                  )}
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Percentage
+                    Percentage <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className={`w-full p-2 border rounded-md ${
+                      errors.percentage ? 'border-red-500' : 'border-gray-300'
+                    } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                     {...register('percentage', {
+                      required: 'Percentage is required',
                       pattern: {
                         value: /^(?:100|[0-9]{1,2})(\.[0-9]{1,2})?$/,
                         message: 'Enter a valid percentage (0-100)',
@@ -449,9 +472,9 @@ const RegistrationForm: React.FC = () => {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
-                Work Experience (Optional)
+                Work Experience (Required for District and State Manager posts only)
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Post/Designation
@@ -464,20 +487,30 @@ const RegistrationForm: React.FC = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Time in Years
+                    Organization Name
                   </label>
                   <input
                     type="text"
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    {...register('timeInYears', {
+                    {...register('organizationName')}
+                  />
+                </div>
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Total Experience (In Years)
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    {...register('totalExperience', {
                       pattern: {
                         value: /^[0-9]+(\.[0-9]{1,2})?$/,
                         message: 'Enter a valid number of years (e.g., 2, 2.5)',
                       },
                     })}
                   />
-                  {errors.timeInYears && (
-                    <p className="text-red-500 text-xs mt-1">{errors.timeInYears.message}</p>
+                  {errors.totalExperience && (
+                    <p className="text-red-500 text-xs mt-1">{errors.totalExperience.message}</p>
                   )}
                 </div>
               </div>
@@ -507,18 +540,18 @@ const RegistrationForm: React.FC = () => {
 
             <div className="mb-8">
               <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
-                District Preference <span className="text-red-500">*</span>
+                Job Location Preference <span className="text-red-500">*</span>
               </h3>
-              <p className="text-sm text-gray-600 mb-3">Select one district preference</p>
+              <p className="text-sm text-gray-600 mb-3">Select one or more district preferences</p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {districtOptions.map((district) => (
                   <div key={district} className="flex items-center">
                     <input
-                      type="radio"
+                      type="checkbox"
                       id={district}
                       value={district}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      {...register('districtPreferences', { required: 'Please select a district' })}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                      {...register('districtPreferences', { required: 'Please select at least one district' })}
                     />
                     <label htmlFor={district} className="ml-2 text-sm text-gray-700">
                       {district}
@@ -687,7 +720,7 @@ const RegistrationForm: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Upload Work Experience Certificate (Optional)
+                    Upload Work Experience Certificate (Only required for State and District Manager Posts)
                   </label>
                   <p className="text-xs text-gray-500 mb-2">
                     JPG/PNG/PDF format, max size 2MB

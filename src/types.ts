@@ -22,7 +22,7 @@ export interface RegistrationData {
   name: string;
   fatherName: string;
   motherName: string;
-  dob: string; // Changed to string since formatDate expects a string
+  dob: string;
   gender: string;
   email: string;
   mobile: string;
@@ -30,10 +30,11 @@ export interface RegistrationData {
   aadhaarNumber: string;
   selectedPosts: string[];
   districtPreferences: string[];
-  collegeBoard?: string;
-  percentage?: string;
+  higherEducation: string;
+  percentage: string;
   postDesignation?: string;
-  timeInYears?: string;
+  organizationName?: string;
+  totalExperience?: string;
   photo: string;
   signature: string;
   cv?: string;
