@@ -7,7 +7,6 @@ import { generateAdmitCardPDF } from '../utils/pdfGenerator';
 import type { RegistrationData } from '../types';
 import {
   Download,
-  Mail,
   AlertCircle,
   X,
   Calendar,
@@ -33,7 +32,7 @@ const AdmitCardDownload: React.FC = () => {
   const [admitCard, setAdmitCard] = useState<RegistrationData | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(union === 'Tirhut Union');
   const [isLoading, setIsLoading] = useState(false);
-  const [isEmailing, setIsEmailing] = useState(false);
+  // const [isEmailing, setIsEmailing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
