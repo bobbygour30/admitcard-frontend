@@ -448,7 +448,7 @@ const RegistrationForm: React.FC = () => {
                 </div>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Percentage <span className="text-red-500">*</span>
+                    Percentage/CGPA/GPA <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"

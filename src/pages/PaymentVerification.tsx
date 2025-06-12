@@ -1,49 +1,117 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
 import axios from '../axiosConfig';
 import { CreditCard, ChevronRight, AlertCircle, X } from 'lucide-react';
 
-interface FormData {
-  transactionNumber: string;
-  transactionDate: string;
+interface LocationState {
+  applicationNumber?: string;
 }
 
 const PaymentVerification: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { applicationNumber } = location.state || {};
+  const { applicationNumber } = (location.state || {}) as LocationState;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormData>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [union, setUnion] = useState<string>('');
 
-  if (!applicationNumber) {
-    navigate('/');
-    return null;
-  }
+  // Load Razorpay checkout script
+  const loadRazorpayScript = () => {
+    return new Promise<boolean>((resolve) => {
+      if (typeof window.Razorpay !== 'undefined') {
+        resolve(true); // Script already loaded
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
 
-  const onSubmit = async (data: FormData) => {
+  const handlePayment = async () => {
+    if (!applicationNumber) {
+      navigate('/');
+      return;
+    }
+
     setApiError(null);
     setIsSubmitting(true);
 
     try {
-      const response = await axios.post('/payment/verify', {
-        applicationNumber,
-        transactionNumber: data.transactionNumber,
-        transactionDate: data.transactionDate,
+      // Load Razorpay script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        setApiError('Failed to load Razorpay SDK');
+        setIsSubmitting(false);
+        return;
+      }
+
+      if (!window.Razorpay) {
+        setApiError('Razorpay SDK not available');
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Fetch Razorpay order from backend
+      const response = await axios.post('/payment/create-order', { applicationNumber });
+      const { order_id, amount, currency, union, key_id } = response.data;
+
+      const options = {
+        key: key_id,
+        amount: amount,
+        currency: currency,
+        name: `${union} Application`,
+        description: `Payment for Application No: ${applicationNumber}`,
+        image: 'https://your-logo-url.com/logo.png', // Replace with your logo URL
+        order_id: order_id,
+        handler: async function (response: any) {
+          try {
+            // Verify payment with backend
+            const verifyResponse = await axios.post('/payment/verify', {
+              applicationNumber,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            setUnion(verifyResponse.data.union);
+            setIsPopupOpen(true);
+          } catch (error: any) {
+            setApiError(error.response?.data?.message || 'Payment verification failed');
+          }
+        },
+        prefill: {
+          name: '',
+          email: '',
+          contact: '',
+        },
+        notes: {
+          applicationNumber,
+        },
+        theme: {
+          color: '#00cc1f',
+        },
+        method: {
+          card: true,
+          netbanking: true,
+          upi: true,
+          wallet: false,
+          emi: false,
+          paylater: false,
+        },
+      };
+
+      const paymentObject = new window.Razorpay(options);
+      paymentObject.on('payment.failed', function (response: any) {
+        setApiError(`Payment failed: ${response.error.description}`);
       });
-      setUnion(response.data.union);
-      setIsPopupOpen(true);
+      paymentObject.open();
     } catch (error: any) {
-      setApiError(error.message || 'Payment verification failed. Please try again.');
-      console.error('Payment Verification Error:', error);
+      setApiError(error.response?.data?.message || 'Failed to create payment order');
     } finally {
       setIsSubmitting(false);
     }
@@ -60,6 +128,11 @@ const PaymentVerification: React.FC = () => {
     navigate('/');
   };
 
+  if (!applicationNumber) {
+    navigate('/');
+    return null;
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
@@ -67,7 +140,7 @@ const PaymentVerification: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <CreditCard className="w-6 h-6 mr-2 text-blue-600" />
-              Payment Verification
+              Payment
             </h2>
             <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-md">
               Application No: {applicationNumber}
@@ -81,95 +154,54 @@ const PaymentVerification: React.FC = () => {
             </p>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Transaction Number <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                className={`w-full p-2 border rounded-md ${
-                  errors.transactionNumber ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                {...register('transactionNumber', {
-                  required: 'Transaction number is required',
-                  pattern: {
-                    value: /^[A-Z0-9]{6,20}$/,
-                    message: 'Enter a valid transaction number',
-                  },
-                })}
-              />
-              {errors.transactionNumber && (
-                <p className="text-red-500 text-xs mt-1">{errors.transactionNumber.message}</p>
+          <div className="flex justify-between gap-4 mt-6">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-md font-semibold flex items-center text-sm transition-colors duration-200"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handlePayment}
+              disabled={isSubmitting}
+              className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-semibold flex items-center text-sm transition-colors duration-200 ${
+                isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  Pay Now
+                  <ChevronRight className="w-5 h-5 ml-2" />
+                </>
               )}
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Transaction Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                className={`w-full p-2 border rounded-md ${
-                  errors.transactionDate ? 'border-red-500' : 'border-gray-300'
-                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                {...register('transactionDate', {
-                  required: 'Transaction date is required',
-                })}
-              />
-              {errors.transactionDate && (
-                <p className="text-red-500 text-xs mt-1">{errors.transactionDate.message}</p>
-              )}
-            </div>
-
-            <div className="flex justify-between gap-4 mt-6">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-md font-semibold flex items-center text-sm transition-colors duration-200"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className={`bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md font-semibold flex items-center text-sm transition-colors duration-200 ${
-                  isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                {isSubmitting ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Verifying...
-                  </>
-                ) : (
-                  <>
-                    Next: Admit Card
-                    <ChevronRight className="w-5 h-5 ml-2" />
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -185,7 +217,7 @@ const PaymentVerification: React.FC = () => {
             </button>
             <div className="text-center">
               <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4">
-                Payment Verified Successfully!
+                Payment Successful!
               </h3>
               <p className="text-xs sm:text-sm text-gray-600 mb-4 sm:mb-6 leading-relaxed">
                 Please remember your Application Number{' '}

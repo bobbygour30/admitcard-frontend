@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import axios from '../axiosConfig';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
 import { generateAdmitCardPDF } from '../utils/pdfGenerator';
-import type { RegistrationData } from '../types';
+// import type { RegistrationData } from '../types';
 import {
   Download,
   AlertCircle,
@@ -21,7 +21,7 @@ interface FormData {
 
 const AdmitCardDownload: React.FC = () => {
   const location = useLocation();
-  const { applicationNumber: initialAppNumber, union } = location.state || {};
+  const { applicationNumber: initialAppNumber } = location.state || {};
 
   const {
     register,
@@ -29,10 +29,10 @@ const AdmitCardDownload: React.FC = () => {
     formState: { errors },
     setValue,
   } = useForm<FormData>();
-  const [admitCard, setAdmitCard] = useState<RegistrationData | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(union === 'Tirhut Union');
+  const [admitCard, setAdmitCard] = useState< any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  // const [isEmailing, setIsEmailing] = useState(false);
+  const [isEmailing, setIsEmailing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
@@ -44,24 +44,38 @@ const AdmitCardDownload: React.FC = () => {
   }, [initialAppNumber, setValue]);
 
   const fetchAdmitCard = async (data: FormData) => {
-    setApiError(null);
-    setIsLoading(true);
+  setApiError(null);
+  setIsLoading(true);
 
-    try {
-      const response = await axios.get('/admit-card', {
-        params: { applicationNumber: data.applicationNumber },
-      });
-      console.log('API Response:', response.data); // Log for debugging
-      setAdmitCard(response.data);
-      setQrCodeUrl(`${window.location.origin}/admit-card?appNo=${data.applicationNumber}`);
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to fetch admit card. Please try again.';
-      setApiError(errorMessage);
-      console.error('Fetch Admit Card Error:', error);
-    } finally {
-      setIsLoading(false);
+  try {
+    const response = await axios.get('/admit-card', {
+      params: { applicationNumber: data.applicationNumber },
+    });
+    console.log('API Response:', response.data);
+    setAdmitCard(response.data.user);
+    setQrCodeUrl(`${window.location.origin}/admit-card?appNo=${data.applicationNumber}`);
+    if (!response.data.emailSent) {
+      setApiError('Admit card fetched, but failed to send notification email.');
     }
-  };
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch admit card. Please try again.';
+    setApiError(errorMessage);
+    console.error('Fetch Admit Card Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+      stack: error.stack,
+    });
+    if (error.response?.data?.message.includes('Tirhut Union')) {
+      setIsModalOpen(true);
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleDownload = async () => {
     if (!admitCard) return;
@@ -73,24 +87,24 @@ const AdmitCardDownload: React.FC = () => {
     }
   };
 
-  // const handleEmail = async () => {
-  //   if (!admitCard) return;
-  //   setApiError(null);
-  //   setIsEmailing(true);
+  const handleEmail = async () => {
+    if (!admitCard) return;
+    setApiError(null);
+    setIsEmailing(true);
 
-  //   try {
-  //     await axios.post('/admit-card/email', {
-  //       applicationNumber: admitCard.applicationNumber,
-  //     });
-  //     alert('Admit card has been emailed successfully!');
-  //   } catch (error: any) {
-  //     const errorMessage = error.response?.data?.message || error.message || 'Failed to send email. Please try again.';
-  //     setApiError(errorMessage);
-  //     console.error('Email Admit Card Error:', error);
-  //   } finally {
-  //     setIsEmailing(false);
-  //   }
-  // };
+    try {
+      await axios.post('/admit-card/email', {
+        applicationNumber: admitCard.applicationNumber,
+      });
+      alert('Admit card has been emailed successfully!');
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send email. Please try again.';
+      setApiError(errorMessage);
+      console.error('Email Admit Card Error:', error);
+    } finally {
+      setIsEmailing(false);
+    }
+  };
 
   const closeModal = () => {
     setIsModalOpen(false);
@@ -268,7 +282,41 @@ const AdmitCardDownload: React.FC = () => {
                   <Download className="w-5 h-5 mr-2" />
                   Download Admit Card
                 </button>
-                
+                <button
+                  onClick={handleEmail}
+                  disabled={isEmailing}
+                  className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold flex items-center text-sm transition-colors duration-200 ${
+                    isEmailing ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  {isEmailing ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Email Admit Card'
+                  )}
+                </button>
               </div>
             </div>
           )}
