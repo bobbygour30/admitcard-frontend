@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import axios from '../axiosConfig';
-import { QRCodeCanvas as QRCode } from 'qrcode.react';
 import { generateAdmitCardPDF } from '../utils/pdfGenerator';
 import {
   Download,
@@ -33,7 +32,6 @@ const AdmitCardDownload: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   useEffect(() => {
     if (initialAppNumber) {
@@ -43,42 +41,39 @@ const AdmitCardDownload: React.FC = () => {
   }, [initialAppNumber, setValue]);
 
   const fetchAdmitCard = async (data: FormData) => {
-    setApiError(null);
-    setIsLoading(true);
+  setApiError(null);
+  setIsLoading(true);
 
-    try {
-      const response = await axios.get('/admit-card', {
-        params: { applicationNumber: data.applicationNumber },
-      });
-      console.log('API Response:', response.data);
-      setAdmitCard(response.data.user);
-      setQrCodeUrl(`${window.location.origin}/admit-card?appNo=${data.applicationNumber}`);
-      if (!response.data.emailSent) {
-        setApiError('Admit card fetched, but failed to send notification email.');
-      }
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.message ||
-        'Failed to fetch admit card. Please try again.';
-      if (union === 'Harit' && errorMessage.includes('Payment not completed')) {
-        // Suppress payment-related errors for Harit union
-        return;
-      }
-      setApiError(errorMessage);
-      console.error('Fetch Admit Card Error:', {
-        message: error.message,
-        status: error.response?.status,
-        data: error.response?.data,
-        stack: error.stack,
-      });
-      if (error.response?.data?.message.includes('Tirhut Union')) {
-        setIsModalOpen(true);
-      }
-    } finally {
-      setIsLoading(false);
+  try {
+    const response = await axios.get('/admit-card', {
+      params: { applicationNumber: data.applicationNumber },
+    });
+    console.log('API Response:', response.data);
+    setAdmitCard(response.data.user);
+    if (!response.data.emailSent) {
+      setApiError('Admit card fetched, but failed to send notification email.');
     }
-  };
+  } catch (error: any) {
+    const errorMessage =
+      error.response?.data?.message ||
+      error.message ||
+      'Failed to fetch admit card. Please try again.';
+    if (union === 'Harit' || union === 'Harit Union') {
+      return; // Suppress errors for Harit
+    }
+    setApiError(errorMessage);
+    console.error('Fetch Admit Card Error:', {
+      message: error.message,
+      status: error.response?.status,
+      data: error.response?.data,
+    });
+    if (errorMessage.includes('Tirhut Union')) {
+      setIsModalOpen(true);
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const handleDownload = async () => {
     if (!admitCard) return;
@@ -271,10 +266,7 @@ const AdmitCardDownload: React.FC = () => {
                       <p className="text-sm text-gray-600">Signature: N/A</p>
                     )}
                   </div>
-                  <div className="mt-4">
-                    <QRCode value={qrCodeUrl} size={128} />
-                    <p className="text-xs text-gray-500 mt-2">Scan to verify admit card</p>
-                  </div>
+                  
                 </div>
               </div>
               <div className="flex gap-4 mt-6">
