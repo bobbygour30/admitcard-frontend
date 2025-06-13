@@ -13,7 +13,10 @@ const DocumentUpload: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
+  console.log('DocumentUpload: Application Number:', applicationNumber);
+
   if (!applicationNumber) {
+    console.warn('No applicationNumber provided, redirecting to home');
     navigate('/');
     return null;
   }
@@ -44,26 +47,38 @@ const DocumentUpload: React.FC = () => {
     navigate('/');
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setApiError(null);
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setApiError(null);
 
-    if (!idProof) {
-      setIdProofError('ID proof is required');
-      return;
-    }
+  if (!idProof) {
+    setIdProofError('ID proof is required');
+    return;
+  }
 
-    setIsSubmitting(true);
+  setIsSubmitting(true);
 
-    try {
-      await axios.post('/registration/upload-document', { applicationNumber, idProof });
-      navigate('/payment-verification', { state: { applicationNumber } });
-    } catch (error: any) {
-      setApiError(error.message || 'Document upload failed. Please try again.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  try {
+    console.log('Fetching user for applicationNumber:', applicationNumber);
+    const userResponse = await axios.get('/registration/user', {
+      params: { applicationNumber },
+    });
+    console.log('User response:', userResponse.data);
+    const union = userResponse.data.union;
+
+    console.log('Uploading document for applicationNumber:', applicationNumber);
+    const uploadResponse = await axios.post('/registration/upload-document', { applicationNumber, idProof });
+    console.log('Upload response:', uploadResponse.data);
+
+    console.log('Navigating based on union:', union);
+    navigate('/admit-card', { state: { applicationNumber, union } });
+  } catch (error: any) {
+    console.error('Document upload error:', error);
+    setApiError(error.response?.data?.message || 'Document upload failed. Please try again.');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -170,7 +185,7 @@ const DocumentUpload: React.FC = () => {
                   </>
                 ) : (
                   <>
-                    Next: Payment Verification
+                    Next
                     <ChevronRight className="w-5 h-5 ml-2" />
                   </>
                 )}

@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import axios from '../axiosConfig';
 import { QRCodeCanvas as QRCode } from 'qrcode.react';
 import { generateAdmitCardPDF } from '../utils/pdfGenerator';
-// import type { RegistrationData } from '../types';
 import {
   Download,
   AlertCircle,
@@ -21,7 +20,7 @@ interface FormData {
 
 const AdmitCardDownload: React.FC = () => {
   const location = useLocation();
-  const { applicationNumber: initialAppNumber } = location.state || {};
+  const { applicationNumber: initialAppNumber, union } = location.state || {};
 
   const {
     register,
@@ -29,7 +28,7 @@ const AdmitCardDownload: React.FC = () => {
     formState: { errors },
     setValue,
   } = useForm<FormData>();
-  const [admitCard, setAdmitCard] = useState< any | null>(null);
+  const [admitCard, setAdmitCard] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailing, setIsEmailing] = useState(false);
@@ -44,38 +43,42 @@ const AdmitCardDownload: React.FC = () => {
   }, [initialAppNumber, setValue]);
 
   const fetchAdmitCard = async (data: FormData) => {
-  setApiError(null);
-  setIsLoading(true);
+    setApiError(null);
+    setIsLoading(true);
 
-  try {
-    const response = await axios.get('/admit-card', {
-      params: { applicationNumber: data.applicationNumber },
-    });
-    console.log('API Response:', response.data);
-    setAdmitCard(response.data.user);
-    setQrCodeUrl(`${window.location.origin}/admit-card?appNo=${data.applicationNumber}`);
-    if (!response.data.emailSent) {
-      setApiError('Admit card fetched, but failed to send notification email.');
+    try {
+      const response = await axios.get('/admit-card', {
+        params: { applicationNumber: data.applicationNumber },
+      });
+      console.log('API Response:', response.data);
+      setAdmitCard(response.data.user);
+      setQrCodeUrl(`${window.location.origin}/admit-card?appNo=${data.applicationNumber}`);
+      if (!response.data.emailSent) {
+        setApiError('Admit card fetched, but failed to send notification email.');
+      }
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to fetch admit card. Please try again.';
+      if (union === 'Harit' && errorMessage.includes('Payment not completed')) {
+        // Suppress payment-related errors for Harit union
+        return;
+      }
+      setApiError(errorMessage);
+      console.error('Fetch Admit Card Error:', {
+        message: error.message,
+        status: error.response?.status,
+        data: error.response?.data,
+        stack: error.stack,
+      });
+      if (error.response?.data?.message.includes('Tirhut Union')) {
+        setIsModalOpen(true);
+      }
+    } finally {
+      setIsLoading(false);
     }
-  } catch (error: any) {
-    const errorMessage =
-      error.response?.data?.message ||
-      error.message ||
-      'Failed to fetch admit card. Please try again.';
-    setApiError(errorMessage);
-    console.error('Fetch Admit Card Error:', {
-      message: error.message,
-      status: error.response?.status,
-      data: error.response?.data,
-      stack: error.stack,
-    });
-    if (error.response?.data?.message.includes('Tirhut Union')) {
-      setIsModalOpen(true);
-    }
-  } finally {
-    setIsLoading(false);
-  }
-};
+  };
 
   const handleDownload = async () => {
     if (!admitCard) return;

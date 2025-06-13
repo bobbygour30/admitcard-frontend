@@ -44,6 +44,7 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
           </div>
           <div>
             <p style="font-size: 11pt; margin: 2mm 0;"><strong>Aadhaar No.:</strong> ${data.aadhaarNumber || 'N/A'}</p>
+            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Highest Qualification:</strong> ${data.higherEducation || 'N/A'}</p>
           </div>
         </div>
       </div>
