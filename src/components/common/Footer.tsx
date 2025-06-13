@@ -43,6 +43,9 @@ const Footer: React.FC = () => {
               </a>
             </div>
           </div>
+          <div>
+          <a href="/admin">Admin Login</a>
+        </div>
         </div>
 
         <div className="mt-6 pt-4 border-t border-gray-700 text-center text-sm">
@@ -50,6 +53,7 @@ const Footer: React.FC = () => {
             © {new Date().getFullYear()} Exam Portal. All Rights Reserved.
           </p>
         </div>
+        
       </div>
     </footer>
   );

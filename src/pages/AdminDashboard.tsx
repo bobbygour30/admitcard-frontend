@@ -1,6 +1,7 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from '../axiosConfig';
 import { Users, FileText, LogOut } from 'lucide-react';
 
 interface Registration {
@@ -16,18 +17,47 @@ interface Registration {
 const AdminDashboard: React.FC = () => {
   const { isAdmin, logout } = useAuth();
   const navigate = useNavigate();
-  const [registrations, ] = useState<Registration[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAdmin) {
-      navigate('/');
+      navigate('/admin/login');
+      return;
     }
+
+    const fetchUsers = async () => {
+      try {
+        const payload = {
+          username: 'admin@examportal.com',
+          password: 'Admin@2024#',
+        };
+        console.log('Sending request to /registration/users with payload:', payload);
+        const response = await axios.post('/registration/users', payload, {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        console.log('Received response:', response.data);
+        setRegistrations(response.data);
+      } catch (err: any) {
+        console.error('Error fetching users:', {
+          message: err.message,
+          status: err.status,
+          response: err.response?.data,
+          headers: err.config?.headers,
+        });
+        setError(err.response?.data?.message || 'Failed to load user data. Please try again.');
+      }
+    };
+
+    fetchUsers();
   }, [isAdmin, navigate]);
 
   const handleLogout = () => {
     logout();
-    navigate('/');
+    navigate('/admin/login');
   };
 
   const filteredRegistrations = registrations.filter(reg => 
@@ -52,6 +82,10 @@ const AdminDashboard: React.FC = () => {
             Logout
           </button>
         </div>
+
+        {error && (
+          <p className="text-red-500 text-sm mb-4">{error}</p>
+        )}
 
         <div className="mb-6">
           <input
