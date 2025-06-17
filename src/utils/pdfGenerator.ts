@@ -40,7 +40,7 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <div style="display: flex; justify-content: space-between;">
           <div>
             <p style="font-size: 11pt; margin: 2mm 0;"><strong>CBT Roll No.:</strong> ${data.applicationNumber || 'N/A'}</p>
-            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Admit Card for:</strong> ${data.union || 'N/A'}</p>
+            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Admit Card for:</strong> ${data.union || 'N/A'} Union</p>
           </div>
           <div>
             <p style="font-size: 11pt; margin: 2mm 0;"><strong>Aadhaar No.:</strong> ${data.aadhaarNumber || 'N/A'}</p>
@@ -55,7 +55,7 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <div style="display: flex; flex-direction: column; gap: 4mm;">
           <p style="margin: 0;"><strong>Centre of CBT Exam:</strong> ${data.examCenter || 'N/A'}</p>
           <p style="margin: 0;"><strong>Shift & Date of CBT Exam:</strong> ${data.examShift || 'N/A'}</p>
-          <p style="margin: 0;"><strong>Time of Gate-Entry:</strong> 30 minutes before shift start time</p>
+          <p style="margin: 0;"><strong>Time of Gate-Entry:</strong> 60 minutes before shift start time</p>
           <p style="margin: 0;"><strong>Candidate's Name:</strong> ${data.name || 'N/A'}</p>
           <p style="margin: 0;"><strong>Date of Birth:</strong> ${
             data.dob ? new Date(data.dob).toLocaleDateString('en-GB') : 'N/A'
