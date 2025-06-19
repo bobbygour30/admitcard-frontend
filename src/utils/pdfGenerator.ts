@@ -1,26 +1,26 @@
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
-import type { RegistrationData } from '../types';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+import type { RegistrationData } from "../types";
 
 export const generateAdmitCardPDF = async (data: RegistrationData) => {
   const pdf = new jsPDF({
-    orientation: 'portrait',
-    unit: 'mm',
-    format: 'a4',
+    orientation: "portrait",
+    unit: "mm",
+    format: "a4",
   });
 
   const imgWidth = 210;
   const maxHeight = 297;
 
   // Page 1: Candidate Details
-  const page1 = document.createElement('div');
-  page1.style.width = '210mm';
-  page1.style.padding = '10mm';
-  page1.style.fontFamily = 'Times New Roman, Times, serif';
-  page1.style.fontSize = '11pt';
-  page1.style.lineHeight = '1.4';
-  page1.style.backgroundColor = '#ffffff';
-  page1.style.boxSizing = 'border-box';
+  const page1 = document.createElement("div");
+  page1.style.width = "210mm";
+  page1.style.padding = "10mm";
+  page1.style.fontFamily = "Times New Roman, Times, serif";
+  page1.style.fontSize = "11pt";
+  page1.style.lineHeight = "1.4";
+  page1.style.backgroundColor = "#ffffff";
+  page1.style.boxSizing = "border-box";
   page1.innerHTML = `
     <div style="border: 1px solid #000; padding: 8mm; border-radius: 5px;">
       <div style="text-align: center; color: #000000; margin-bottom: 8mm;">
@@ -39,12 +39,22 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
       <div style="background-color: #e6e6e6; padding: 5mm; border: 1px solid #000; border-radius: 3px; margin-bottom: 8mm;">
         <div style="display: flex; justify-content: space-between;">
           <div>
-            <p style="font-size: 11pt; margin: 2mm 0;"><strong>CBT Roll No.:</strong> ${data.applicationNumber || 'N/A'}</p>
-            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Admit Card for:</strong> ${data.union || 'N/A'} Union</p>
+            <p style="font-size: 11pt; margin: 2mm 0;"><strong>CBT Roll No.:</strong> ${
+              data.applicationNumber || "N/A"
+            }</p>
+            <p style="font-size: 11pt; margin: 2mm 0;">
+  <strong>Admit Card for:</strong> ${data.union || "N/A"}${
+    data.union === "Tirhut Union" ? "" : " Union"
+  }
+</p>
           </div>
           <div>
-            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Aadhaar No.:</strong> ${data.aadhaarNumber || 'N/A'}</p>
-            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Highest Qualification:</strong> ${data.higherEducation || 'N/A'}</p>
+            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Aadhaar No.:</strong> ${
+              data.aadhaarNumber || "N/A"
+            }</p>
+            <p style="font-size: 11pt; margin: 2mm 0;"><strong>Highest Qualification:</strong> ${
+              data.higherEducation || "N/A"
+            }</p>
           </div>
         </div>
       </div>
@@ -53,30 +63,50 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
       </div>
       <div style="display: grid; grid-template-columns: 3fr 1fr; gap: 10mm; margin-bottom: 8mm;">
         <div style="display: flex; flex-direction: column; gap: 4mm;">
-          <p style="margin: 0;"><strong>Centre of CBT Exam:</strong> ${data.examCenter || 'N/A'}</p>
-          <p style="margin: 0;"><strong>Shift & Date of CBT Exam:</strong> ${data.examShift || 'N/A'}</p>
-          <p style="margin: 0;"><strong>Time of Gate-Entry:</strong> 60 minutes before shift start time</p>
-          <p style="margin: 0;"><strong>Candidate's Name:</strong> ${data.name || 'N/A'}</p>
-          <p style="margin: 0;"><strong>Date of Birth:</strong> ${
-            data.dob ? new Date(data.dob).toLocaleDateString('en-GB') : 'N/A'
+          <p style="margin: 0;"><strong>Centre of CBT Exam:</strong> ${
+            data.examCenter || "N/A"
           }</p>
-          <p style="margin: 0;"><strong>Gender:</strong> ${data.gender ? data.gender.toUpperCase() : 'N/A'}</p>
-          <p style="margin: 0;"><strong>Father's/Husband's Name:</strong> ${data.fatherName || 'N/A'}</p>
-          <p style="margin: 0;"><strong>Mother's Name:</strong> ${data.motherName || 'N/A'}</p>
+          <p style="margin: 0;"><strong>Shift & Date of CBT Exam:</strong> ${
+            data.examShift || "N/A"
+          }</p>
+          <p style="margin: 0;"><strong>Time of Gate-Entry:</strong> 60 minutes before shift start time</p>
+          <p style="margin: 0;"><strong>Candidate's Name:</strong> ${
+            data.name || "N/A"
+          }</p>
+          <p style="margin: 0;"><strong>Date of Birth:</strong> ${
+            data.dob ? new Date(data.dob).toLocaleDateString("en-GB") : "N/A"
+          }</p>
+          <p style="margin: 0;"><strong>Gender:</strong> ${
+            data.gender ? data.gender.toUpperCase() : "N/A"
+          }</p>
+          <p style="margin: 0;"><strong>Father's/Husband's Name:</strong> ${
+            data.fatherName || "N/A"
+          }</p>
+          <p style="margin: 0;"><strong>Mother's Name:</strong> ${
+            data.motherName || "N/A"
+          }</p>
           <p style="margin: 0;"><strong>Posts Applied For:</strong></p>
           <ul style="list-style-type: disc; padding-left: 8mm; margin: 2mm 0;">
-            ${data.selectedPosts?.length ? data.selectedPosts.map((post) => `<li style="margin: 1mm 0;">${post}</li>`).join('') : '<li style="margin: 1mm 0;">N/A</li>'}
+            ${
+              data.selectedPosts?.length
+                ? data.selectedPosts
+                    .map((post) => `<li style="margin: 1mm 0;">${post}</li>`)
+                    .join("")
+                : '<li style="margin: 1mm 0;">N/A</li>'
+            }
           </ul>
           <p style="margin: 0;"><strong>District Preferences:</strong> ${
-            data.districtPreferences?.length ? data.districtPreferences.join(', ') : 'N/A'
+            data.districtPreferences?.length
+              ? data.districtPreferences.join(", ")
+              : "N/A"
           }</p>
         </div>
         <div style="text-align: center; display: flex; flex-direction: column; gap: 4mm;">
           <img src="${
-            data.photo || ''
+            data.photo || ""
           }" style="width: 45mm; height: 55mm; object-fit: contain; border: 1px solid #000; border-radius: 3px;" />
           <img src="${
-            data.signature || ''
+            data.signature || ""
           }" style="width: 45mm; height: 12mm; object-fit: contain; border: 1px solid #000; border-radius: 3px;" />
           <p style="font-size: 9pt; margin: 2mm 0;">Signature of the Candidate</p>
         </div>
@@ -85,7 +115,7 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <div>
           <div style="width: 60mm; height: 12mm; border-bottom: 1px solid #000;">
             <img src="${
-              data.signature || ''
+              data.signature || ""
             }" style="width: 100%; height: 100%; object-fit: contain;" />
           </div>
           <p style="font-size: 9pt; margin: 2mm 0;">Signature of the Candidate</p>
@@ -100,20 +130,27 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
   document.body.appendChild(page1);
   const canvas1 = await html2canvas(page1, { scale: 2, useCORS: true });
   document.body.removeChild(page1);
-  const imgData1 = canvas1.toDataURL('image/png');
+  const imgData1 = canvas1.toDataURL("image/png");
   const imgHeight1 = (canvas1.height * imgWidth) / canvas1.width;
-  pdf.addImage(imgData1, 'PNG', 0, 0, imgWidth, Math.min(imgHeight1, maxHeight));
+  pdf.addImage(
+    imgData1,
+    "PNG",
+    0,
+    0,
+    imgWidth,
+    Math.min(imgHeight1, maxHeight)
+  );
 
   // Page 2: Instructions
   pdf.addPage();
-  const page2 = document.createElement('div');
-  page2.style.width = '210mm';
-  page2.style.padding = '10mm';
-  page2.style.fontFamily = 'Times New Roman, Times, serif';
-  page2.style.fontSize = '11pt';
-  page2.style.lineHeight = '1.4';
-  page2.style.backgroundColor = '#ffffff';
-  page2.style.boxSizing = 'border-box';
+  const page2 = document.createElement("div");
+  page2.style.width = "210mm";
+  page2.style.padding = "10mm";
+  page2.style.fontFamily = "Times New Roman, Times, serif";
+  page2.style.fontSize = "11pt";
+  page2.style.lineHeight = "1.4";
+  page2.style.backgroundColor = "#ffffff";
+  page2.style.boxSizing = "border-box";
   page2.innerHTML = `
     <div style="border: 1px solid #000; padding: 8mm; border-radius: 5px; height: calc(100% - 16mm);">
       <div style="text-align: center; margin-bottom: 8mm;">
@@ -203,9 +240,16 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
   document.body.appendChild(page2);
   const canvas2 = await html2canvas(page2, { scale: 2, useCORS: true });
   document.body.removeChild(page2);
-  const imgData2 = canvas2.toDataURL('image/png');
+  const imgData2 = canvas2.toDataURL("image/png");
   const imgHeight2 = (canvas2.height * imgWidth) / canvas2.width;
-  pdf.addImage(imgData2, 'PNG', 0, 0, imgWidth, Math.min(imgHeight2, maxHeight));
+  pdf.addImage(
+    imgData2,
+    "PNG",
+    0,
+    0,
+    imgWidth,
+    Math.min(imgHeight2, maxHeight)
+  );
 
-  pdf.save(`admit_card_${data.applicationNumber || 'unknown'}.pdf`);
+  pdf.save(`admit_card_${data.applicationNumber || "unknown"}.pdf`);
 };
