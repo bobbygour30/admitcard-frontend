@@ -332,7 +332,7 @@ const AdmitCardDownload: React.FC = () => {
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Admit cards for Tirhut Union candidates will be available for download starting from{' '}
-              <strong>June 25, 2025</strong>. Please check back after this date.
+              <strong>June 24, 2025</strong>. Please check back after this date.
             </p>
             <button
               onClick={closeModal}
