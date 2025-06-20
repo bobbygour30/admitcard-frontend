@@ -202,7 +202,7 @@ const RegistrationForm: React.FC = () => {
           {isFormDisabled ? (
             <div className="text-center py-10">
               <p className="text-lg font-semibold text-gray-700">
-                Site is under maintenance. We will get back to you very soon.
+                Thank you for your response. We will get back to you very soon.
               </p>
             </div>
           ) : (
