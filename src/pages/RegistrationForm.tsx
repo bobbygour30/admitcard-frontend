@@ -106,6 +106,9 @@ const RegistrationForm: React.FC = () => {
   const selectedUnion = watch('union');
   const districtOptions = selectedUnion === 'Tirhut Union' ? tirhutDistrictOptions : haritDistrictOptions;
 
+  // Disable form only for Harit Union
+  const isFormDisabled = selectedUnion === 'Harit Union';
+
   useEffect(() => {
     resetField('districtPreferences');
   }, [selectedUnion, resetField]);
@@ -187,9 +190,6 @@ const RegistrationForm: React.FC = () => {
     navigate('/');
   };
 
-  // Temporarily disable the form
-  const isFormDisabled = true;
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
@@ -199,58 +199,58 @@ const RegistrationForm: React.FC = () => {
             Registration Form
           </h2>
 
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
+              Union Selection
+            </h3>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Select Union <span className="text-red-500">*</span>
+              </label>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {unionOptions.map((union) => (
+                  <label
+                    key={union}
+                    className={`relative flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                      selectedUnion === union
+                        ? 'border-blue-600 bg-blue-50'
+                        : 'border-gray-300 bg-gray-50'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      value={union}
+                      className="hidden"
+                      {...register('union', { required: 'Please select a union' })}
+                    />
+                    <div className="flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-700">{union}</span>
+                    </div>
+                    <div
+                      className={`absolute top-2 right-2 w-4 h-4 rounded-full transition-all duration-300 ${
+                        selectedUnion === union ? 'bg-blue-600 scale-100' : 'bg-gray-300 scale-0'
+                      }`}
+                    ></div>
+                  </label>
+                ))}
+              </div>
+              {errors.union && (
+                <p className="text-red-500 text-xs mt-2 flex items-center">
+                  <AlertCircle className="w-3 h-3 mr-1" />
+                  {errors.union.message}
+                </p>
+              )}
+            </div>
+          </div>
+
           {isFormDisabled ? (
             <div className="text-center py-10">
               <p className="text-lg font-semibold text-gray-700">
-                Site is under maintenance. We will get back to you very soon.
+                Thank you for your response. We will get back to you very soon.
               </p>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
-                  Union Selection
-                </h3>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Select Union <span className="text-red-500">*</span>
-                  </label>
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {unionOptions.map((union) => (
-                      <label
-                        key={union}
-                        className={`relative flex-1 p-4 rounded-lg border-2 cursor-pointer transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
-                          selectedUnion === union
-                            ? 'border-blue-600 bg-blue-50'
-                            : 'border-gray-300 bg-gray-50'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          value={union}
-                          className="hidden"
-                          {...register('union', { required: 'Please select a union' })}
-                        />
-                        <div className="flex items-center justify-center">
-                          <span className="text-sm font-medium text-gray-700">{union}</span>
-                        </div>
-                        <div
-                          className={`absolute top-2 right-2 w-4 h-4 rounded-full transition-all duration-300 ${
-                            selectedUnion === union ? 'bg-blue-600 scale-100' : 'bg-gray-300 scale-0'
-                          }`}
-                        ></div>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.union && (
-                    <p className="text-red-500 text-xs mt-2 flex items-center">
-                      <AlertCircle className="w-3 h-3 mr-1" />
-                      {errors.union.message}
-                    </p>
-                  )}
-                </div>
-              </div>
-
               <div className="mb-8">
                 <h3 className="text-lg font-semibold mb-4 pb-2 border-b text-gray-700">
                   Personal Information
