@@ -28,7 +28,6 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <p style="font-size: 12pt; margin: 2mm 0;">FOR</p>
         <p style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Various Vegetable Cooperative Societies</p>
         <p style="font-size: 9pt; margin: 2mm 0;">(Registered Under Bihar Cooperative Society Act 1935)</p>
-        <p style="font-size: 10pt; margin: 2mm 0;">2nd Floor, Vikas Bhawan, New Secretariat, Patna-800015</p>
         <p style="font-size: 12pt; margin: 2mm 0;">BY</p>
         <p style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Isha Protectional Security Guard Pvt Ltd</p>
         <div style="display: flex; justify-content: center; gap: 15mm; margin: 6mm 0;">
