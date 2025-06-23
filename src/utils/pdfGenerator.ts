@@ -218,12 +218,6 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <div style="display: flex; margin-bottom: 4mm;">
           <span style="width: 8mm; text-align: right; margin-right: 4mm;">7.</span>
           <span style="flex: 1; text-align: justify;">
-            No candidate will be allowed to carry any electronic devices including mobile phones, Bluetooth devices, portable music players, calculators etc. inside the examination hall. You will not be responsible for safe keeping of candidate's personal belongings.
-          </span>
-        </div>
-        <div style="display: flex; margin-bottom: 4mm;">
-          <span style="width: 8mm; text-align: right; margin-right: 4mm;">8.</span>
-          <span style="flex: 1; text-align: justify;">
             Candidates are not allowed to carry any personal belongings or prohibited items including electronic devices, mobile phone, calculator etc. inside the examination hall. We will not be responsible for safe keeping of candidate's personal belongings.
           </span>
         </div>
