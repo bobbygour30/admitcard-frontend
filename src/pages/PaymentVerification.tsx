@@ -28,61 +28,31 @@ const PaymentVerification = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [userData, setUserData] = useState<{ email: string; mobile: string }>({ email: '', mobile: '' });
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!applicationNumber || !union) {
-        console.error('Missing applicationNumber or union, redirecting to home');
-        setApiError('Invalid application number or union');
-        navigate('/');
-        return;
-      }
+    if (!applicationNumber || !union) {
+      console.error('Missing applicationNumber or union, redirecting to home');
+      setApiError('Invalid application number or union');
+      navigate('/');
+      return;
+    }
 
-      if (!['Harit Union', 'Tirhut Union'].includes(union)) {
-        console.error('Invalid union value:', union);
-        setApiError('Invalid union specified');
-        navigate('/');
-        return;
-      }
-
-      try {
-        console.log('Fetching user data for:', { applicationNumber, union });
-        const response = await axios.get('/registration/user', {
-          params: { applicationNumber },
-        });
-        console.log('Fetched user data:', response.data);
-        const { email, mobile } = response.data;
-        if (!email || !mobile) {
-          console.warn('Missing email or mobile in user data:', response.data);
-        }
-        setUserData({ email: email || '', mobile: mobile || '' });
-      } catch (error: any) {
-        console.error('Error fetching user data:', error);
-        setApiError(error.response?.data?.message || 'Failed to fetch user data');
-        navigate('/');
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.async = true;
-      script.onload = () => {
-        console.log('Razorpay script loaded');
-        initiatePayment();
-      };
-      script.onerror = () => {
-        console.error('Failed to load Razorpay script');
-        setApiError('Failed to load payment gateway');
-      };
-      document.body.appendChild(script);
-
-      return () => {
-        document.body.removeChild(script);
-      };
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('Razorpay script loaded');
+      initiatePayment();
     };
+    script.onerror = () => {
+      console.error('Failed to load Razorpay script');
+      setApiError('Failed to load payment gateway');
+    };
+    document.body.appendChild(script);
 
-    fetchUserData();
+    return () => {
+      document.body.removeChild(script);
+    };
   }, [applicationNumber, union, navigate]);
 
   const initiatePayment = async () => {
@@ -93,7 +63,7 @@ const PaymentVerification = () => {
       console.log('Creating Razorpay order for:', { applicationNumber, amount: 60000, union });
       const response = await axios.post('/payment/create-order', {
         applicationNumber,
-        amount: 60000, // ₹600 in paise
+        amount: 60000,
         union,
       });
       console.log('Razorpay order response:', JSON.stringify(response.data, null, 2));
@@ -111,7 +81,7 @@ const PaymentVerification = () => {
         return;
       }
 
-      const razorpayKey = union === 'Harit Union' ? import.meta.env.VITE_HARIT_RAZORPAY_KEY_ID : import.meta.env.VITE_RAZORPAY_KEY_ID;
+      const razorpayKey = union === 'Tirhut' ? import.meta.env.VITE_RAZORPAY_KEY_ID : import.meta.env.VITE_HARIT_RAZORPAY_KEY_ID;
 
       const options = {
         key: razorpayKey || '',
@@ -127,11 +97,11 @@ const PaymentVerification = () => {
               applicationNumber,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
+              paymentStatus: true,
               razorpay_signature: response.razorpay_signature,
               union,
             });
             console.log('Payment verified:', verifyResponse.data);
-            console.log('Navigating to admit-card:', { applicationNumber, union });
             navigate('/admit-card', { state: { applicationNumber, union } });
           } catch (error: any) {
             console.error('Payment verification error:', error);
@@ -139,8 +109,8 @@ const PaymentVerification = () => {
           }
         },
         prefill: {
-          email: userData.email,
-          contact: userData.mobile,
+          email: '',
+          contact: '',
         },
         theme: {
           color: '#3B82F6',
@@ -158,7 +128,6 @@ const PaymentVerification = () => {
         order_id: options.order_id,
         amount: options.amount,
         union,
-        prefill: options.prefill,
       });
 
       if (!options.key) {
