@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../axiosConfig';
-import { AlertCircle, X } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 
 interface RazorpayResponse {
   razorpay_payment_id: string;
@@ -28,32 +28,61 @@ const PaymentVerification = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userData, setUserData] = useState<{ email: string; mobile: string }>({ email: '', mobile: '' });
 
   useEffect(() => {
-    if (!applicationNumber || !union) {
-      console.error('Missing applicationNumber or union, redirecting to home');
-      setApiError('Invalid application number or union');
-      navigate('/');
-      return;
-    }
+    const fetchUserData = async () => {
+      if (!applicationNumber || !union) {
+        console.error('Missing applicationNumber or union, redirecting to home');
+        setApiError('Invalid application number or union');
+        navigate('/');
+        return;
+      }
 
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    script.onload = () => {
-      console.log('Razorpay script loaded');
-      initiatePayment();
-    };
-    script.onerror = () => {
-      console.error('Failed to load Razorpay script');
-      setApiError('Failed to load payment gateway');
-    };
-    document.body.appendChild(script);
+      if (!['Harit Union', 'Tirhut Union'].includes(union)) {
+        console.error('Invalid union value:', union);
+        setApiError('Invalid union specified');
+        navigate('/');
+        return;
+      }
 
-    return () => {
-      document.body.removeChild(script);
+      try {
+        console.log('Fetching user data for:', { applicationNumber, union });
+        const response = await axios.get('/registration/user', {
+          params: { applicationNumber },
+        });
+        console.log('Fetched user data:', response.data);
+        const { email, mobile } = response.data;
+        if (!email || !mobile) {
+          console.warn('Missing email or mobile in user data:', response.data);
+        }
+        setUserData({ email: email || '', mobile: mobile || '' });
+      } catch (error: any) {
+        console.error('Error fetching user data:', error);
+        setApiError(error.response?.data?.message || 'Failed to fetch user data');
+        navigate('/');
+        return;
+      }
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.async = true;
+      script.onload = () => {
+        console.log('Razorpay script loaded');
+        initiatePayment();
+      };
+      script.onerror = () => {
+        console.error('Failed to load Razorpay script');
+        setApiError('Failed to load payment gateway');
+      };
+      document.body.appendChild(script);
+
+      return () => {
+        document.body.removeChild(script);
+      };
     };
+
+    fetchUserData();
   }, [applicationNumber, union, navigate]);
 
   const initiatePayment = async () => {
@@ -82,7 +111,7 @@ const PaymentVerification = () => {
         return;
       }
 
-      const razorpayKey = union === 'Tirhut' ? import.meta.env.VITE_RAZORPAY_KEY_ID : import.meta.env.VITE_HARIT_RAZORPAY_KEY_ID;
+      const razorpayKey = union === 'Harit Union' ? import.meta.env.VITE_HARIT_RAZORPAY_KEY_ID : import.meta.env.VITE_RAZORPAY_KEY_ID;
 
       const options = {
         key: razorpayKey || '',
@@ -98,20 +127,20 @@ const PaymentVerification = () => {
               applicationNumber,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
-              paymentStatus: true,
               razorpay_signature: response.razorpay_signature,
               union,
             });
             console.log('Payment verified:', verifyResponse.data);
-            setIsModalOpen(true);
+            console.log('Navigating to admit-card:', { applicationNumber, union });
+            navigate('/admit-card', { state: { applicationNumber, union } });
           } catch (error: any) {
             console.error('Payment verification error:', error);
             setApiError(error.response?.data?.message || 'Payment verification failed');
           }
         },
         prefill: {
-          email: '',
-          contact: '',
+          email: userData.email,
+          contact: userData.mobile,
         },
         theme: {
           color: '#3B82F6',
@@ -129,6 +158,7 @@ const PaymentVerification = () => {
         order_id: options.order_id,
         amount: options.amount,
         union,
+        prefill: options.prefill,
       });
 
       if (!options.key) {
@@ -155,17 +185,11 @@ const PaymentVerification = () => {
     }
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-    console.log('Navigating to home after payment completion');
-    navigate('/'); // Redirect to home, not admit-card
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6 text-gray8-00">Payment Verification</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray-800">Payment Verification</h2>
 
           {apiError && (
             <p className="text-red-500 text-xs mt-2 flex items-center mb-4">
@@ -175,31 +199,6 @@ const PaymentVerification = () => {
           )}
 
           {isLoading && <p className="text-gray-600">Initiating payment...</p>}
-
-          {isModalOpen && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-6 max-w-md w-full relative">
-                <button
-                  onClick={closeModal}
-                  className="absolute top-2 right-2 text-gray-600 hover:text-gray-800"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <h3 className="text-lg font-semibold text-gray-800 mb-4">
-                  Payment Successful
-                </h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Your registration and payment are complete for {union}. <strong>Your admit card will be available after 25 June 2025.</strong>
-                </p>
-                <button
-                  onClick={closeModal}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-semibold text-sm"
-                >
-                  Go to Home
-                </button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
