@@ -175,7 +175,14 @@ const RegistrationForm: React.FC = () => {
       };
 
       const response = await axios.post('/registration/register', payload);
-      navigate('/upload-documents', { state: { applicationNumber: response.data.applicationNumber } });
+      const normalizedUnion = data.union.replace(' Union', ''); // Convert 'Harit Union' to 'Harit', 'Tirhut Union' to 'Tirhut'
+      console.log('Navigating to upload-documents with state:', {
+        applicationNumber: response.data.applicationNumber,
+        union: normalizedUnion,
+      });
+      navigate('/upload-documents', {
+        state: { applicationNumber: response.data.applicationNumber, union: normalizedUnion },
+      });
     } catch (error: any) {
       setApiError(error.message || 'Registration failed. Please try again.');
     } finally {

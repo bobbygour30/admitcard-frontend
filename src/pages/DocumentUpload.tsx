@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../axiosConfig';
 import { Upload, AlertCircle } from 'lucide-react';
@@ -6,12 +6,52 @@ import { Upload, AlertCircle } from 'lucide-react';
 const DocumentUpload = () => {
   const navigate = useNavigate();
   const { state } = useLocation();
-  const { applicationNumber } = state || {};
-
+  const [applicationNumber, setApplicationNumber] = useState<string | undefined>(state?.applicationNumber);
+  const [union, setUnion] = useState<string | undefined>(state?.union);
   const [idProof, setIdProof] = useState<string | null>(null);
   const [idProofError, setIdProofError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  // Fetch applicationNumber and union if missing
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (!applicationNumber || !union) {
+        try {
+          if (!applicationNumber) {
+            console.error('No applicationNumber provided, redirecting to home');
+            setApiError('Invalid application number');
+            navigate('/');
+            return;
+          }
+          console.log('Fetching user data due to missing:', { applicationNumber, union });
+          const response = await axios.get('/registration/user', {
+            params: { applicationNumber },
+          });
+          console.log('Fetched user data:', response.data);
+          const { applicationNumber: fetchedAppNumber, union: fetchedUnion, paymentStatus } = response.data;
+          if (!fetchedAppNumber || !fetchedUnion || paymentStatus === undefined) {
+            console.error('Fetched data missing required fields:', response.data);
+            setApiError('Unable to fetch user data');
+            navigate('/');
+            return;
+          }
+          setApplicationNumber(fetchedAppNumber);
+          // Normalize fetched union
+          const normalizedUnion = fetchedUnion.replace(' Union', '');
+          setUnion(normalizedUnion);
+        } catch (error: any) {
+          console.error('Error fetching user data:', error);
+          setApiError(error.response?.data?.message || 'Failed to fetch user data. Please try again.');
+          navigate('/');
+        }
+      }
+    };
+
+    fetchUserData();
+  }, [applicationNumber, union, navigate]);
+
+  console.log('DocumentUpload state:', { applicationNumber, union });
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setIdProofError(null);
@@ -37,6 +77,19 @@ const DocumentUpload = () => {
     e.preventDefault();
     setApiError(null);
 
+    if (!applicationNumber || !union) {
+      console.error('Missing applicationNumber or union', { applicationNumber, union });
+      setApiError('Invalid application number or union');
+      navigate('/');
+      return;
+    }
+
+    if (!['Tirhut', 'Harit'].includes(union)) {
+      console.error('Invalid union value:', union);
+      setApiError('Invalid union specified');
+      return;
+    }
+
     if (!idProof) {
       setIdProofError('ID proof is required');
       return;
@@ -50,7 +103,21 @@ const DocumentUpload = () => {
         params: { applicationNumber },
       });
       console.log('User response:', userResponse.data);
-      const { union, paymentStatus } = userResponse.data;
+      const { union: userUnion, paymentStatus } = userResponse.data;
+
+      if (paymentStatus === undefined) {
+        console.error('Payment status missing in user response:', userResponse.data);
+        setApiError('Invalid user data');
+        return;
+      }
+
+      // Normalize userUnion for comparison
+      const normalizedUserUnion = userUnion.replace(' Union', '');
+      if (normalizedUserUnion !== union) {
+        console.warn('Union mismatch:', { stateUnion: union, userUnion, normalizedUserUnion });
+        setApiError('Union mismatch. Please contact support.');
+        return;
+      }
 
       console.log('Uploading document for applicationNumber:', applicationNumber);
       const uploadResponse = await axios.post('/registration/upload-document', {
@@ -59,12 +126,13 @@ const DocumentUpload = () => {
       });
       console.log('Upload response:', uploadResponse.data);
 
-      if (union === 'Harit' || paymentStatus) {
-        console.log('Navigating to admit-card for Harit or paid user:', union);
-        navigate('/admit-card', { state: { applicationNumber, union } });
+      console.log('Navigation decision:', { applicationNumber, normalizedUserUnion, paymentStatus });
+      if (paymentStatus) {
+        console.log('Navigating to admit-card for paid user:', { applicationNumber, union: normalizedUserUnion });
+        navigate('/admit-card', { state: { applicationNumber, union: normalizedUserUnion } });
       } else {
-        console.log('Navigating to payment-verification for Tirhut user:', union);
-        navigate('/payment-verification', { state: { applicationNumber, union } });
+        console.log('Navigating to payment-verification for unpaid user:', { applicationNumber, union: normalizedUserUnion });
+        navigate('/payment-verification', { state: { applicationNumber, union: normalizedUserUnion } });
       }
     } catch (error: any) {
       console.error('Document upload error:', error);

@@ -31,16 +31,10 @@ const PaymentVerification = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!applicationNumber) {
-      console.error('Missing applicationNumber, redirecting to home');
-      setApiError('Invalid application number');
+    if (!applicationNumber || !union) {
+      console.error('Missing applicationNumber or union, redirecting to home');
+      setApiError('Invalid application number or union');
       navigate('/');
-      return;
-    }
-
-    if (union === 'Harit' || union === 'Harit Union') {
-      console.log('Harit union detected, redirecting to admit-card:', { applicationNumber, union });
-      navigate('/admit-card', { state: { applicationNumber, union } });
       return;
     }
 
@@ -67,10 +61,11 @@ const PaymentVerification = () => {
     setApiError(null);
 
     try {
-      console.log('Creating Razorpay order for:', { applicationNumber, amount: 60000 });
+      console.log('Creating Razorpay order for:', { applicationNumber, amount: 60000, union });
       const response = await axios.post('/payment/create-order', {
         applicationNumber,
         amount: 60000, // ₹600 in paise
+        union,
       });
       console.log('Razorpay order response:', JSON.stringify(response.data, null, 2));
 
@@ -87,21 +82,25 @@ const PaymentVerification = () => {
         return;
       }
 
+      const razorpayKey = union === 'Tirhut' ? import.meta.env.VITE_RAZORPAY_KEY_ID : import.meta.env.VITE_HARIT_RAZORPAY_KEY_ID;
+
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID || '',
+        key: razorpayKey || '',
         amount: order.amount,
         currency: order.currency,
         name: 'CBT Exam Portal',
-        description: 'Application Fee',
+        description: `Application Fee for ${union}`,
         order_id: order.id,
         handler: async (response: RazorpayResponse) => {
           try {
-            console.log('Verifying payment:', response);
+            console.log('Verifying payment:', { ...response, union });
             const verifyResponse = await axios.post('/payment/verify', {
               applicationNumber,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_order_id: response.razorpay_order_id,
+              paymentStatus: true,
               razorpay_signature: response.razorpay_signature,
+              union,
             });
             console.log('Payment verified:', verifyResponse.data);
             setIsModalOpen(true);
@@ -129,10 +128,11 @@ const PaymentVerification = () => {
         key: options.key,
         order_id: options.order_id,
         amount: options.amount,
+        union,
       });
 
       if (!options.key) {
-        console.error('Missing Razorpay key ID');
+        console.error('Missing Razorpay key ID for union:', union);
         setApiError('Payment gateway configuration error');
         return;
       }
@@ -165,7 +165,7 @@ const PaymentVerification = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Payment Verification</h2>
+          <h2 className="text-2xl font-bold mb-6 text-gray8-00">Payment Verification</h2>
 
           {apiError && (
             <p className="text-red-500 text-xs mt-2 flex items-center mb-4">
@@ -189,7 +189,7 @@ const PaymentVerification = () => {
                   Payment Successful
                 </h3>
                 <p className="text-sm text-gray-600 mb-4">
-                  Your registration and payment are complete. <strong>Your admit card will be available after 25 June 2025.</strong>
+                  Your registration and payment are complete for {union}. <strong>Your admit card will be available after 25 June 2025.</strong>
                 </p>
                 <button
                   onClick={closeModal}
