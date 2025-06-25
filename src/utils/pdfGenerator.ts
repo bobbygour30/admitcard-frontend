@@ -29,10 +29,10 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <p style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Various Vegetable Cooperative Societies</p>
         <p style="font-size: 9pt; margin: 2mm 0;">(Registered Under Bihar Cooperative Society Act 1935)</p>
         <p style="font-size: 12pt; margin: 2mm 0;">BY</p>
-        <p style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">Isha Protectional Security Guard Pvt Ltd</p>
+        <p style="font-size: 16pt; font-weight: bold; text-transform: uppercase; margin: 0;">${data.union === "Tirhut Union" ? "Shiva Protection Force Private Limited" : "Isha Protectional Security Guard Pvt Ltd"}</p>
         <div style="display: flex; justify-content: center; gap: 15mm; margin: 6mm 0;">
-          <span style="font-size: 10pt;"><strong>Website:</strong> https://www.ishaprotectional.com</span>
-          <span style="font-size: 10pt;"><strong>Email:</strong> ipsguard@yahoo.com</span>
+          <span style="font-size: 10pt;"><strong>Website:</strong> ${data.union === "Tirhut Union" ? "https://shivagroups.com" : "https://www.ishaprotectional.com"}</span>
+          <span style="font-size: 10pt;"><strong>Email:</strong> ${data.union === "Tirhut Union" ? "spf_patna@shivagroups.com" : "ipsguard@yahoo.com"}</span>
         </div>
       </div>
       <div style="background-color: #e6e6e6; padding: 5mm; border: 1px solid #000; border-radius: 3px; margin-bottom: 8mm;">
