@@ -224,7 +224,7 @@ export const generateAdmitCardPDF = async (data: RegistrationData) => {
         <div style="display: flex; margin-bottom: 4mm;">
           <span style="width: 8mm; text-align: right; margin-right: 4mm;">8.</span>
           <span style="flex: 1; text-align: justify;">
-            For any query or clarification please email at <a href="mailto:writetogsgspl@gmail.com">writetogsgspl@gmail.com</a> or Call/WhatsApp at 01169270767.
+            For any query or clarification please email at <a href="mailto:writetogsgspl@gmail.com">writetogsgspl@gmail.com</a> or Call/WhatsApp at 9472596352.
           </span>
         </div>
       </div>
