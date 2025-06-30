@@ -254,10 +254,10 @@ const RegistrationForm: React.FC = () => {
             </div>
           </div>
 
-          {selectedUnion === 'Tirhut Union' ? (
+          {(selectedUnion === 'Tirhut Union' || selectedUnion === 'Harit Union') ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
               <p className="text-red-600 text-lg font-semibold">
-                Registration for Tirhut Union is closed. Thank you for your response.
+                Registration for {selectedUnion} is closed. Thank you for your response.
               </p>
             </div>
           ) : (
